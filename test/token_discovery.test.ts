@@ -7,9 +7,9 @@ import { Blockchains, AssetTypes } from 'heat-server-common';
 
 describe('Token Discovery', () => {
   it('should work', async () => {
-    const blockchain: Blockchains = Blockchains.ETHEREUM
-    const assetType: AssetTypes = AssetTypes.TOKEN_TYPE_1
-    const addrXpub: string = '0x123456789'
+    const blockchain: Blockchains = Blockchains.FIMK
+    const assetType: AssetTypes = AssetTypes.NATIVE
+    const addrXpub: string = 'FIM-5JCD-ESDK-CHK6-FFJX2'
     let resp = await tokenDiscovery(createContext('Token'), {
       blockchain, assetType, addrXpub
     })

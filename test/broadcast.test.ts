@@ -7,17 +7,17 @@ import { Blockchains, AssetTypes } from 'heat-server-common';
 
 describe('Broadcast', () => {
   it('should work', async () => {
-    const blockchain = Blockchains.ETHEREUM
-    const transactionHex = '0x12345'
+    const blockchain = Blockchains.FIMK
+    const transactionHex = '01ABAB'
     const assetType = AssetTypes.NATIVE
-    let resp = await broadcast(createContext('Status'), {
+    let resp = await broadcast(createContext('Broadcast'), {
       blockchain, transactionHex, assetType
     })
     //console.log('response', resp)
     isObject(resp)
     let result = resp.value
     isObject(result)
-    isString(result.transactionId)
-    isString(result.errorMessage)
+    if (result.transactionId) isString(result.transactionId)
+    if (result.errorMessage) isString(result.errorMessage)
   });
 });

@@ -7,10 +7,10 @@ import { Blockchains, AssetTypes } from 'heat-server-common';
 
 describe('Event Lookup', () => {
   it('should work', async () => {
-    const blockchain: Blockchains = Blockchains.ETHEREUM
+    const blockchain: Blockchains = Blockchains.FIMK
     const assetType: AssetTypes = AssetTypes.NATIVE
-    const assetId: string = '0x1234'
-    const addrXpub: string = '0x5678'
+    const addrXpub: string = 'FIM-5JCD-ESDK-CHK6-FFJX2'
+    const assetId: string = '0'
     const from: number = 0
     const to: number = 100
     const minimal: boolean = false
@@ -18,7 +18,7 @@ describe('Event Lookup', () => {
     let resp = await eventLookup(createContext('Event'), {
       blockchain, assetType, assetId, addrXpub, from, to, minimal
     })
-    //console.log('response', resp)
+    // console.log('response', resp)
     isObject(resp)
     let result = resp.value
     isArray(result)

@@ -1,12 +1,13 @@
 {
-  "name": "heat-server-sdk",
+  "name": "heat-server-fimk",
   "version": "1.0.0",
-  "description": "Bootstraps server plugin for heat wallet app",
+  "description": "Fimk blockchain Heat Server indexer plugin",
   "main": "dist/index.js",
   "scripts": {
     "clean": "rimraf dist/*",
     "prepublish": "npm run clean && tsc",
-    "test": "mocha -r ts-node/register test/*.test.ts"
+    "test": "mocha -r ts-node/register test/*.test.ts",
+    "test-one": "mocha -r ts-node/register "
   },
   "author": "me",
   "license": "ISC",

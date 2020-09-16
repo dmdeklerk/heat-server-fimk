@@ -7,8 +7,8 @@ import { Blockchains } from 'heat-server-common';
 
 describe('Publickey Lookup', () => {
   it('should work', async () => {
-    const blockchain: Blockchains = Blockchains.ETHEREUM
-    const addrXpub: string = '0x12345678'
+    const blockchain: Blockchains = Blockchains.FIMK
+    const addrXpub: string = 'FIM-34B3-PWY5-TMHC-9JYW8'
     let resp = await publicKeyLookup(createContext('Publickey'), {
       blockchain, addrXpub
     })
@@ -17,5 +17,6 @@ describe('Publickey Lookup', () => {
     let result = resp.value
     isObject(result)
     isString(result.publicKey)
+    chai.assert.equal(result.publicKey, 'a375c5c75157a872c8a3fca88900ad0a3100207efd734e46915490f970e4b766')
   });
 });

@@ -7,14 +7,14 @@ import { Blockchains, AssetTypes } from 'heat-server-common';
 
 describe('Transaction Status', () => {
   it('should work', async () => {
-    const blockchain: Blockchains = Blockchains.ETHEREUM
+    const blockchain: Blockchains = Blockchains.FIMK
     const assetType: AssetTypes = AssetTypes.NATIVE
-    const addrXpub: string = '0x12345'
-    const transactionId: string = '0x67890'
+    const addrXpub: string = 'FIM-34B3-PWY5-TMHC-9JYW8'
+    const transactionId: string = '17969731842336387666'
     let resp = await transactionStatus(createContext('Transaction'), {
       blockchain, assetType, addrXpub, transactionId
     })
-    //console.log('response', resp)
+    console.log('response', resp)
     isObject(resp)
     let result = resp.value
     isObject(result)
