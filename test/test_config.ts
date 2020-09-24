@@ -1,18 +1,11 @@
 import { Logger } from '@nestjs/common';
 import { MonitoredRequest, CallContext } from 'heat-server-common';
-import { RsAddress } from '../src/vendor/rs-address'
+import { FIMK_GETADDRESS } from '../src/index'
 
 export const testConfig = {
   protocol: 'https',
   host: 'cloud.mofowallet.org:7886/nxt'
 }
-
-// Standard FIMK server
-const FIMK_GETADDRESS = function(address) {
-  const addr = new RsAddress('FIM');
-  addr.set(address);
-  return addr.account_id();
-};
 
 export function createContext(label?: string) {
   let { host, protocol } = testConfig;
