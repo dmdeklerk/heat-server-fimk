@@ -14,9 +14,10 @@ exports.FIMK_GETADDRESS = void 0;
 __exportStar(require("./explorer"), exports);
 __exportStar(require("./vendor/rs-address"), exports);
 const rs_address_1 = require("./vendor/rs-address");
-exports.FIMK_GETADDRESS = function (address) {
+const FIMK_GETADDRESS = function (address) {
     const addr = new rs_address_1.RsAddress('FIM');
     addr.set(address);
     return addr.account_id();
 };
+exports.FIMK_GETADDRESS = FIMK_GETADDRESS;
 //# sourceMappingURL=index.js.map

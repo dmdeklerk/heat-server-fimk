@@ -192,8 +192,8 @@ async function smartEventsLookup(
       return transactions;
     }
   }
-  logger.warn(`Not reached.. `);
-  return null;
+  // logger.warn(`Not reached.. `);
+  return transactions;
 }
 
 function getEventsFromTransaction(txData: TransactionApiResponse, _addrXpub) {

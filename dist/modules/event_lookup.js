@@ -20,14 +20,14 @@ async function eventLookup(context, param) {
     try {
         const { logger, middleWare } = context;
         const { addrXpub, minimal } = param;
-        const addrXpub_ = middleWare && lodash_1.isFunction(middleWare.getAddress)
+        const addrXpub_ = middleWare && (0, lodash_1.isFunction)(middleWare.getAddress)
             ? await middleWare.getAddress(addrXpub)
             : addrXpub;
         param.addrXpub = addrXpub_;
         const data = await smartEventsLookup(context, param);
         let value;
         if (!Array.isArray(data)) {
-            logger.log(`No transactions for ${addrXpub} got ${heat_server_common_1.prettyPrint(data)}`);
+            logger.log(`No transactions for ${addrXpub} got ${(0, heat_server_common_1.prettyPrint)(data)}`);
             value = [];
         }
         else if (minimal) {
@@ -38,7 +38,7 @@ async function eventLookup(context, param) {
             for (let i = 0; i < data.length; i++) {
                 let { txData, events } = data[i];
                 events.forEach((event) => {
-                    event.data = heat_server_common_1.createEventData(event);
+                    event.data = (0, heat_server_common_1.createEventData)(event);
                 });
                 let date = new Date(Date.UTC(2013, 10, 24, 12, 0, 0, 0) + txData.timestamp * 1000);
                 value.push({
@@ -76,7 +76,7 @@ async function smartEventsLookup(context, param) {
     const { blockchain, assetType, assetId, addrXpub, from, to, minimal } = param;
     const size = to - from;
     let unconfirmedTransactionsJson = await unconfirmedTransactionsLookupReq(context, addrXpub);
-    let data = heat_server_common_1.tryParse(unconfirmedTransactionsJson);
+    let data = (0, heat_server_common_1.tryParse)(unconfirmedTransactionsJson);
     let transactions = [];
     if (Array.isArray(data.unconfirmedTransactions)) {
         transactions = data.unconfirmedTransactions.map((txData) => {
@@ -87,7 +87,7 @@ async function smartEventsLookup(context, param) {
         });
     }
     else {
-        logger.warn(`No unconfirmed transactions ${heat_server_common_1.prettyPrint(data)}`);
+        logger.warn(`No unconfirmed transactions ${(0, heat_server_common_1.prettyPrint)(data)}`);
     }
     transactions = transactions.filter(({ events }) => {
         return events.find(event => event.assetType == assetType && event.assetId == assetId);
@@ -101,7 +101,7 @@ async function smartEventsLookup(context, param) {
     while (cursor < to) {
         let confirmedTransactionJson = await transactionsLookupReq(context, addrXpub, cursor, cursor + 100);
         cursor = cursor + 100 + 1;
-        let data = heat_server_common_1.tryParse(confirmedTransactionJson);
+        let data = (0, heat_server_common_1.tryParse)(confirmedTransactionJson);
         if (Array.isArray(data.transactions)) {
             if (data.transactions.length < 100) {
                 endReached = true;
@@ -118,15 +118,14 @@ async function smartEventsLookup(context, param) {
             transactions = transactions.concat(temp);
         }
         else {
-            logger.warn(`No unconfirmed transactions ${heat_server_common_1.prettyPrint(data)}`);
+            logger.warn(`No unconfirmed transactions ${(0, heat_server_common_1.prettyPrint)(data)}`);
         }
         let slice = transactions.slice(from, to + 1);
         if (slice.length == size || endReached) {
             return transactions;
         }
     }
-    logger.warn(`Not reached.. `);
-    return null;
+    return transactions;
 }
 function getEventsFromTransaction(txData, _addrXpub) {
     try {
@@ -140,8 +139,8 @@ function getEventsFromTransaction(txData, _addrXpub) {
             case TYPE_PAYMENT:
                 if (txData.subtype == SUBTYPE_PAYMENT_ORDINARY_PAYMENT) {
                     events.push(isIncoming
-                        ? heat_server_common_1.buildEventReceive({ addrXpub, publicKey }, heat_server_common_1.AssetTypes.NATIVE, '0', txData.amountNQT, 0)
-                        : heat_server_common_1.buildEventSend({ addrXpub, publicKey }, heat_server_common_1.AssetTypes.NATIVE, '0', txData.amountNQT, 0));
+                        ? (0, heat_server_common_1.buildEventReceive)({ addrXpub, publicKey }, heat_server_common_1.AssetTypes.NATIVE, '0', txData.amountNQT, 0)
+                        : (0, heat_server_common_1.buildEventSend)({ addrXpub, publicKey }, heat_server_common_1.AssetTypes.NATIVE, '0', txData.amountNQT, 0));
                 }
                 break;
             case TYPE_COLORED_COINS:
@@ -151,8 +150,8 @@ function getEventsFromTransaction(txData, _addrXpub) {
                     case SUBTYPE_COLORED_COINS_ASSET_TRANSFER: {
                         let { asset, quantityQNT } = txData.attachment;
                         events.push(isIncoming
-                            ? heat_server_common_1.buildEventReceive({ addrXpub, publicKey }, heat_server_common_1.AssetTypes.TOKEN_TYPE_1, asset, quantityQNT, 0)
-                            : heat_server_common_1.buildEventSend({ addrXpub, publicKey }, heat_server_common_1.AssetTypes.TOKEN_TYPE_1, asset, quantityQNT, 0));
+                            ? (0, heat_server_common_1.buildEventReceive)({ addrXpub, publicKey }, heat_server_common_1.AssetTypes.TOKEN_TYPE_1, asset, quantityQNT, 0)
+                            : (0, heat_server_common_1.buildEventSend)({ addrXpub, publicKey }, heat_server_common_1.AssetTypes.TOKEN_TYPE_1, asset, quantityQNT, 0));
                         break;
                     }
                     case SUBTYPE_COLORED_COINS_ASK_ORDER_PLACEMENT:
@@ -162,8 +161,8 @@ function getEventsFromTransaction(txData, _addrXpub) {
                         const assetType = heat_server_common_1.AssetTypes.TOKEN_TYPE_1;
                         const currencyType = heat_server_common_1.AssetTypes.NATIVE;
                         events.push(isAsk
-                            ? heat_server_common_1.buildEventSellOrder(assetType, asset, currencyType, '0', quantityQNT, priceNQT)
-                            : heat_server_common_1.buildEventBuyOrder(assetType, asset, currencyType, '0', quantityQNT, priceNQT));
+                            ? (0, heat_server_common_1.buildEventSellOrder)(assetType, asset, currencyType, '0', quantityQNT, priceNQT)
+                            : (0, heat_server_common_1.buildEventBuyOrder)(assetType, asset, currencyType, '0', quantityQNT, priceNQT));
                         break;
                     }
                 }
@@ -172,13 +171,13 @@ function getEventsFromTransaction(txData, _addrXpub) {
                 switch (txData.subtype) {
                     case SUBTYPE_ACCOUNT_CONTROL_EFFECTIVE_BALANCE_LEASING:
                         const { period } = txData.attachment;
-                        events.push(heat_server_common_1.buildEventLeaseBalance({ addrXpub, publicKey }, period));
+                        events.push((0, heat_server_common_1.buildEventLeaseBalance)({ addrXpub, publicKey }, period));
                         break;
                 }
                 break;
         }
         if (!isIncoming) {
-            events.push(heat_server_common_1.buildEventFee(txData.feeNQT));
+            events.push((0, heat_server_common_1.buildEventFee)(txData.feeNQT));
         }
         return events;
     }

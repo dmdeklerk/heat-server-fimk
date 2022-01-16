@@ -7,13 +7,13 @@ async function publicKeyLookup(context, param) {
     try {
         const { req, protocol, host, logger, middleWare } = context;
         const { addrXpub } = param;
-        const addrXpub_ = middleWare && lodash_1.isFunction(middleWare.getAddress)
+        const addrXpub_ = middleWare && (0, lodash_1.isFunction)(middleWare.getAddress)
             ? await middleWare.getAddress(addrXpub)
             : addrXpub;
         const url = `${protocol}://${host}?requestType=getAccount&account=${addrXpub}&includeLessors=false&includeAssets=false&includeAssetDetails=false&includeCurrencies=false&includeEffectiveBalance=false`;
         const json = await req.get(url);
-        const data = heat_server_common_1.tryParse(json, logger);
-        if (lodash_1.isString(data.account)) {
+        const data = (0, heat_server_common_1.tryParse)(json, logger);
+        if ((0, lodash_1.isString)(data.account)) {
             return {
                 value: {
                     publicKey: data.publicKey,
@@ -21,7 +21,7 @@ async function publicKeyLookup(context, param) {
             };
         }
         else {
-            logger.warn(`No public key for ${addrXpub} ${heat_server_common_1.prettyPrint(data)}`);
+            logger.warn(`No public key for ${addrXpub} ${(0, heat_server_common_1.prettyPrint)(data)}`);
             return {
                 value: {
                     publicKey: null,

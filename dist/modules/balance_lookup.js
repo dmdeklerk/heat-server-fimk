@@ -5,14 +5,14 @@ const heat_server_common_1 = require("heat-server-common");
 const token_discovery_1 = require("./token_discovery");
 async function balanceLookup(context, param) {
     const { assetType, addrXpub, blockchain, assetId } = param;
-    const response = await token_discovery_1.tokenDiscovery(context, {
+    const response = await (0, token_discovery_1.tokenDiscovery)(context, {
         blockchain,
         assetType,
         addrXpub
     });
     if (response.value) {
         let entry = response.value.find(entry => entry.assetType == assetType &&
-            heat_server_common_1.compareCaseInsensitive(entry.assetId, assetId));
+            (0, heat_server_common_1.compareCaseInsensitive)(entry.assetId, assetId));
         return {
             value: {
                 value: entry ? entry.value : '0',

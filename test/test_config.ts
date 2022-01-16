@@ -1,5 +1,4 @@
-import { Logger } from '@nestjs/common';
-import { MonitoredRequest, CallContext } from 'heat-server-common';
+import { MonitoredRequest, CallContext, createLogger } from 'heat-server-common';
 import { FIMK_GETADDRESS } from '../src/index'
 
 export const testConfig = {
@@ -9,7 +8,7 @@ export const testConfig = {
 
 export function createContext(label?: string) {
   let { host, protocol } = testConfig;
-  let logger = new Logger()
+  let logger = createLogger(label)
   let context: CallContext = {
     host,
     protocol,

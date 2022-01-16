@@ -8,8 +8,8 @@ async function transactionStatus(context, param) {
         const { logger } = context;
         const { addrXpub, transactionId } = param;
         const body = await transactionStatusReq(context, transactionId);
-        const transaction = heat_server_common_1.tryParse(body, logger);
-        if (lodash_1.isNumber(transaction.confirmations)) {
+        const transaction = (0, heat_server_common_1.tryParse)(body, logger);
+        if ((0, lodash_1.isNumber)(transaction.confirmations)) {
             return {
                 value: {
                     isAccepted: true,
@@ -18,7 +18,7 @@ async function transactionStatus(context, param) {
             };
         }
         let body2 = await unconfirmedReq(context, addrXpub);
-        let unconfirmedTransactions = heat_server_common_1.tryParse(body2, logger);
+        let unconfirmedTransactions = (0, heat_server_common_1.tryParse)(body2, logger);
         if (!Array.isArray(unconfirmedTransactions)) {
             return {
                 value: {

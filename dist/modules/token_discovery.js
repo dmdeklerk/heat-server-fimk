@@ -7,14 +7,14 @@ async function tokenDiscovery(context, param) {
     try {
         const { req, protocol, host, logger, middleWare } = context;
         const { addrXpub } = param;
-        const addrXpub_ = middleWare && lodash_1.isFunction(middleWare.getAddress)
+        const addrXpub_ = middleWare && (0, lodash_1.isFunction)(middleWare.getAddress)
             ? await middleWare.getAddress(addrXpub)
             : addrXpub;
         const url = `${protocol}://${host}?requestType=getAccount&includeAssets=true&account=${addrXpub_}`;
         const json = await req.get(url);
-        const data = heat_server_common_1.tryParse(json, logger);
+        const data = (0, heat_server_common_1.tryParse)(json, logger);
         const value = [];
-        if (lodash_1.isString(data.unconfirmedBalanceNQT)) {
+        if ((0, lodash_1.isString)(data.unconfirmedBalanceNQT)) {
             value.push({
                 assetId: '0',
                 assetType: heat_server_common_1.AssetTypes.NATIVE,
