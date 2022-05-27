@@ -6,6 +6,7 @@ const lodash_1 = require("lodash");
 const TYPE_PAYMENT = 0;
 const TYPE_MESSAGING = 1;
 const TYPE_COLORED_COINS = 2;
+const TYPE_DIGITAL_GOODS = 3;
 const TYPE_ACCOUNT_CONTROL = 4;
 const SUBTYPE_PAYMENT_ORDINARY_PAYMENT = 0;
 const SUBTYPE_MESSAGING_ARBITRARY_MESSAGE = 0;
@@ -16,6 +17,14 @@ const SUBTYPE_COLORED_COINS_BID_ORDER_PLACEMENT = 3;
 const SUBTYPE_COLORED_COINS_ASK_ORDER_CANCELLATION = 4;
 const SUBTYPE_COLORED_COINS_BID_ORDER_CANCELLATION = 5;
 const SUBTYPE_ACCOUNT_CONTROL_EFFECTIVE_BALANCE_LEASING = 0;
+const SUBTYPE_DIGITAL_GOODS_LISTING = 0;
+const SUBTYPE_DIGITAL_GOODS_DELISTING = 1;
+const SUBTYPE_DIGITAL_GOODS_PRICE_CHANGE = 2;
+const SUBTYPE_DIGITAL_GOODS_QUANTITY_CHANGE = 3;
+const SUBTYPE_DIGITAL_GOODS_PURCHASE = 4;
+const SUBTYPE_DIGITAL_GOODS_DELIVERY = 5;
+const SUBTYPE_DIGITAL_GOODS_FEEDBACK = 6;
+const SUBTYPE_DIGITAL_GOODS_REFUND = 7;
 async function eventLookup(context, param) {
     try {
         const { logger, middleWare } = context;
@@ -90,7 +99,7 @@ async function smartEventsLookup(context, param) {
         logger.warn(`No unconfirmed transactions ${(0, heat_server_common_1.prettyPrint)(data)}`);
     }
     transactions = transactions.filter(({ events }) => {
-        return events.find(event => event.assetType == assetType && event.assetId == assetId);
+        return events.find((event) => event.assetType == assetType && event.assetId == assetId);
     });
     let slice = transactions.slice(from, to + 1);
     if (slice.length == size) {
@@ -113,7 +122,7 @@ async function smartEventsLookup(context, param) {
                 };
             });
             temp = temp.filter(({ events }) => {
-                return events.find(event => event.assetType == assetType && event.assetId == assetId);
+                return events.find((event) => event.assetType == assetType && event.assetId == assetId);
             });
             transactions = transactions.concat(temp);
         }
@@ -139,8 +148,8 @@ function getEventsFromTransaction(txData, _addrXpub) {
             case TYPE_PAYMENT:
                 if (txData.subtype == SUBTYPE_PAYMENT_ORDINARY_PAYMENT) {
                     events.push(isIncoming
-                        ? (0, heat_server_common_1.buildEventReceive)({ addrXpub, publicKey }, heat_server_common_1.AssetTypes.NATIVE, '0', txData.amountNQT, 0)
-                        : (0, heat_server_common_1.buildEventSend)({ addrXpub, publicKey }, heat_server_common_1.AssetTypes.NATIVE, '0', txData.amountNQT, 0));
+                        ? (0, heat_server_common_1.buildEventReceive)({ addrXpub, publicKey }, heat_server_common_1.AssetTypes.NATIVE, "0", txData.amountNQT, 0)
+                        : (0, heat_server_common_1.buildEventSend)({ addrXpub, publicKey }, heat_server_common_1.AssetTypes.NATIVE, "0", txData.amountNQT, 0));
                 }
                 break;
             case TYPE_COLORED_COINS:
@@ -161,8 +170,8 @@ function getEventsFromTransaction(txData, _addrXpub) {
                         const assetType = heat_server_common_1.AssetTypes.TOKEN_TYPE_1;
                         const currencyType = heat_server_common_1.AssetTypes.NATIVE;
                         events.push(isAsk
-                            ? (0, heat_server_common_1.buildEventSellOrder)(assetType, asset, currencyType, '0', quantityQNT, priceNQT)
-                            : (0, heat_server_common_1.buildEventBuyOrder)(assetType, asset, currencyType, '0', quantityQNT, priceNQT));
+                            ? (0, heat_server_common_1.buildEventSellOrder)(assetType, asset, currencyType, "0", quantityQNT, priceNQT)
+                            : (0, heat_server_common_1.buildEventBuyOrder)(assetType, asset, currencyType, "0", quantityQNT, priceNQT));
                         break;
                     }
                 }
@@ -175,6 +184,23 @@ function getEventsFromTransaction(txData, _addrXpub) {
                         break;
                 }
                 break;
+            case TYPE_DIGITAL_GOODS:
+                switch (txData.subtype) {
+                    case SUBTYPE_DIGITAL_GOODS_PURCHASE: {
+                        const { goods, quantity, priceNQT, deliveryDeadlineTimestamp } = txData.attachment;
+                        events.push((0, heat_server_common_1.buildEventDgsPurchase)(goods, quantity, priceNQT, deliveryDeadlineTimestamp));
+                        break;
+                    }
+                    case SUBTYPE_DIGITAL_GOODS_DELIVERY: {
+                        const { purchase, goodsData, goodsNonce, discountNQT, goodsIsText, } = txData.attachment;
+                        events.push((0, heat_server_common_1.buildEventDgsDelivery)(purchase, goodsData, goodsNonce, discountNQT, goodsIsText));
+                        break;
+                    }
+                    case SUBTYPE_DIGITAL_GOODS_REFUND:
+                        const { purchase, refundNQT } = (txData.attachment);
+                        events.push((0, heat_server_common_1.buildEventDgsRefund)(purchase, refundNQT));
+                        break;
+                }
         }
         if (!isIncoming) {
             events.push((0, heat_server_common_1.buildEventFee)(txData.feeNQT));

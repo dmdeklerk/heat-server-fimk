@@ -1,5 +1,26 @@
-import { EventLookupParam, EventLookupResult, EventLookupEvent, tryParse, SourceTypes, CallContext, ModuleResponse, prettyPrint, createEventData, EventStandardType, AssetTypes, buildEventReceive, buildEventSend, buildEventSellOrder, buildEventBuyOrder, buildEventLeaseBalance, buildEventFee } from 'heat-server-common'
-import { isFunction } from 'lodash';
+import {
+  EventLookupParam,
+  EventLookupResult,
+  EventLookupEvent,
+  tryParse,
+  SourceTypes,
+  CallContext,
+  ModuleResponse,
+  prettyPrint,
+  createEventData,
+  EventStandardType,
+  AssetTypes,
+  buildEventReceive,
+  buildEventSend,
+  buildEventSellOrder,
+  buildEventBuyOrder,
+  buildEventLeaseBalance,
+  buildEventFee,
+  buildEventDgsPurchase,
+  buildEventDgsDelivery,
+  buildEventDgsRefund,
+} from "heat-server-common";
+import { isFunction } from "lodash";
 
 interface TransactionApiResponse {
   type: number;
@@ -16,6 +37,9 @@ interface TransactionApiResponse {
   attachment: AttachmentApiResponse;
 }
 
+/**
+ * AssetTransfer, Orders, Balance Leas
+ */
 interface AttachmentApiResponse {
   quantityQNT?: string;
   asset?: string;
@@ -24,9 +48,30 @@ interface AttachmentApiResponse {
   period?: number;
 }
 
+interface AttachmentApiResponseDgsPurchase {
+  goods: string;
+  quantity: number;
+  priceNQT: string;
+  deliveryDeadlineTimestamp: number;
+}
+
+interface AttachmentApiResponseDgsDelivery {
+  purchase: string;
+  goodsData: string;
+  goodsNonce: string;
+  discountNQT: string;
+  goodsIsText: boolean;
+}
+
+interface AttachmentApiResponseDgsRefund {
+  purchase: string;
+  refundNQT: string;
+}
+
 const TYPE_PAYMENT = 0;
 const TYPE_MESSAGING = 1;
 const TYPE_COLORED_COINS = 2;
+const TYPE_DIGITAL_GOODS = 3;
 const TYPE_ACCOUNT_CONTROL = 4;
 const SUBTYPE_PAYMENT_ORDINARY_PAYMENT = 0;
 const SUBTYPE_MESSAGING_ARBITRARY_MESSAGE = 0;
@@ -37,23 +82,32 @@ const SUBTYPE_COLORED_COINS_BID_ORDER_PLACEMENT = 3;
 const SUBTYPE_COLORED_COINS_ASK_ORDER_CANCELLATION = 4;
 const SUBTYPE_COLORED_COINS_BID_ORDER_CANCELLATION = 5;
 const SUBTYPE_ACCOUNT_CONTROL_EFFECTIVE_BALANCE_LEASING = 0;
+const SUBTYPE_DIGITAL_GOODS_LISTING = 0;
+const SUBTYPE_DIGITAL_GOODS_DELISTING = 1;
+const SUBTYPE_DIGITAL_GOODS_PRICE_CHANGE = 2;
+const SUBTYPE_DIGITAL_GOODS_QUANTITY_CHANGE = 3;
+const SUBTYPE_DIGITAL_GOODS_PURCHASE = 4;
+const SUBTYPE_DIGITAL_GOODS_DELIVERY = 5;
+const SUBTYPE_DIGITAL_GOODS_FEEDBACK = 6;
+const SUBTYPE_DIGITAL_GOODS_REFUND = 7;
 
-export async function eventLookup(context: CallContext, param: EventLookupParam): Promise<ModuleResponse<Array<EventLookupResult>>> {
+export async function eventLookup(
+  context: CallContext,
+  param: EventLookupParam
+): Promise<ModuleResponse<Array<EventLookupResult>>> {
   try {
-    const { logger, middleWare } = context
-    const { addrXpub, minimal } = param
+    const { logger, middleWare } = context;
+    const { addrXpub, minimal } = param;
     const addrXpub_ =
       middleWare && isFunction(middleWare.getAddress)
         ? await middleWare.getAddress(addrXpub)
         : addrXpub;
 
-    param.addrXpub = addrXpub_
+    param.addrXpub = addrXpub_;
     const data = await smartEventsLookup(context, param);
     let value;
     if (!Array.isArray(data)) {
-      logger.log(
-        `No transactions for ${addrXpub} got ${prettyPrint(data)}`,
-      );
+      logger.log(`No transactions for ${addrXpub} got ${prettyPrint(data)}`);
       value = [];
     } else if (minimal) {
       value = data.map(({ txData }) => txData.transaction);
@@ -65,7 +119,7 @@ export async function eventLookup(context: CallContext, param: EventLookupParam)
           event.data = createEventData(event);
         });
         let date = new Date(
-          Date.UTC(2013, 10, 24, 12, 0, 0, 0) + txData.timestamp * 1000,
+          Date.UTC(2013, 10, 24, 12, 0, 0, 0) + txData.timestamp * 1000
         );
         value.push({
           timestamp: date.getTime(),
@@ -86,44 +140,56 @@ export async function eventLookup(context: CallContext, param: EventLookupParam)
   }
 }
 
-function transactionsLookupReq(context: CallContext, addrXpub: string, from: number, to: number) {
-  const { req, protocol, host } = context
+function transactionsLookupReq(
+  context: CallContext,
+  addrXpub: string,
+  from: number,
+  to: number
+) {
+  const { req, protocol, host } = context;
   const url = `${protocol}://${host}?requestType=getBlockchainTransactions&account=${addrXpub}&firstIndex=${from}&lastIndex=${to}`;
   return req.get(url);
 }
 
-function unconfirmedTransactionsLookupReq(context: CallContext, addrXpub: string) {
-  const { req, protocol, host } = context
+function unconfirmedTransactionsLookupReq(
+  context: CallContext,
+  addrXpub: string
+) {
+  const { req, protocol, host } = context;
   const url = `${protocol}://${host}?requestType=getUnconfirmedTransactions&account=${addrXpub}`;
   return req.get(url);
 }
 
 /**
-   * Algorithm to obtain both confirmed and unconfirmed transactions and filter these based on
-   * assetType and assetId. The returned data has to be a range section determined by {from} and
-   * {to} parameters provided.
-   *
-   * 1. Lookup all unconfirmed transactions for account
-   * 2. Filter out all transactions that do not match {assetType} + {assetId}
-   * 3. If {from} + {to} was satisfied with this data alone, return that
-   * 4. If insuficient keep loading transactions and filter these for {assetType} + {assetId}
-   *    untill we have sufficient transactions to satisfy {from} + {to} or when we reach
-   *    the end of the transactions for account.
-   */
+ * Algorithm to obtain both confirmed and unconfirmed transactions and filter these based on
+ * assetType and assetId. The returned data has to be a range section determined by {from} and
+ * {to} parameters provided.
+ *
+ * 1. Lookup all unconfirmed transactions for account
+ * 2. Filter out all transactions that do not match {assetType} + {assetId}
+ * 3. If {from} + {to} was satisfied with this data alone, return that
+ * 4. If insuficient keep loading transactions and filter these for {assetType} + {assetId}
+ *    untill we have sufficient transactions to satisfy {from} + {to} or when we reach
+ *    the end of the transactions for account.
+ */
 async function smartEventsLookup(
-  context: CallContext, param: EventLookupParam,
+  context: CallContext,
+  param: EventLookupParam
 ): Promise<
   Array<{
     txData: TransactionApiResponse;
     events: Array<EventStandardType>;
   }>
 > {
-  const { req, protocol, host, logger, middleWare } = context
-  const { blockchain, assetType, assetId, addrXpub, from, to, minimal } = param
+  const { req, protocol, host, logger, middleWare } = context;
+  const { blockchain, assetType, assetId, addrXpub, from, to, minimal } = param;
   const size = to - from;
 
   // 1. Lookup all unconfirmed transactions for account
-  let unconfirmedTransactionsJson = await unconfirmedTransactionsLookupReq(context, addrXpub);
+  let unconfirmedTransactionsJson = await unconfirmedTransactionsLookupReq(
+    context,
+    addrXpub
+  );
   let data = tryParse(unconfirmedTransactionsJson);
   let transactions: Array<{
     txData: TransactionApiResponse;
@@ -136,7 +202,7 @@ async function smartEventsLookup(
           txData,
           events: getEventsFromTransaction(txData, addrXpub),
         };
-      },
+      }
     );
   } else {
     logger.warn(`No unconfirmed transactions ${prettyPrint(data)}`);
@@ -145,7 +211,7 @@ async function smartEventsLookup(
   // 2. Filter out all transactions that do not match {assetType} + {assetId}
   transactions = transactions.filter(({ events }) => {
     return events.find(
-      event => event.assetType == assetType && event.assetId == assetId,
+      (event) => event.assetType == assetType && event.assetId == assetId
     );
   });
 
@@ -162,7 +228,7 @@ async function smartEventsLookup(
       context,
       addrXpub,
       cursor,
-      cursor + 100,
+      cursor + 100
     );
     cursor = cursor + 100 + 1;
     let data = tryParse(confirmedTransactionJson);
@@ -178,7 +244,7 @@ async function smartEventsLookup(
       });
       temp = temp.filter(({ events }) => {
         return events.find(
-          event => event.assetType == assetType && event.assetId == assetId,
+          (event) => event.assetType == assetType && event.assetId == assetId
         );
       });
       transactions = transactions.concat(temp);
@@ -210,19 +276,19 @@ function getEventsFromTransaction(txData: TransactionApiResponse, _addrXpub) {
           events.push(
             isIncoming
               ? buildEventReceive(
-                { addrXpub, publicKey },
-                AssetTypes.NATIVE,
-                '0',
-                txData.amountNQT,
-                0,
-              )
+                  { addrXpub, publicKey },
+                  AssetTypes.NATIVE,
+                  "0",
+                  txData.amountNQT,
+                  0
+                )
               : buildEventSend(
-                { addrXpub, publicKey },
-                AssetTypes.NATIVE,
-                '0',
-                txData.amountNQT,
-                0,
-              ),
+                  { addrXpub, publicKey },
+                  AssetTypes.NATIVE,
+                  "0",
+                  txData.amountNQT,
+                  0
+                )
           );
         }
         break;
@@ -235,19 +301,19 @@ function getEventsFromTransaction(txData: TransactionApiResponse, _addrXpub) {
             events.push(
               isIncoming
                 ? buildEventReceive(
-                  { addrXpub, publicKey },
-                  AssetTypes.TOKEN_TYPE_1,
-                  asset,
-                  quantityQNT,
-                  0,
-                )
+                    { addrXpub, publicKey },
+                    AssetTypes.TOKEN_TYPE_1,
+                    asset,
+                    quantityQNT,
+                    0
+                  )
                 : buildEventSend(
-                  { addrXpub, publicKey },
-                  AssetTypes.TOKEN_TYPE_1,
-                  asset,
-                  quantityQNT,
-                  0,
-                ),
+                    { addrXpub, publicKey },
+                    AssetTypes.TOKEN_TYPE_1,
+                    asset,
+                    quantityQNT,
+                    0
+                  )
             );
             break;
           }
@@ -261,21 +327,21 @@ function getEventsFromTransaction(txData: TransactionApiResponse, _addrXpub) {
             events.push(
               isAsk
                 ? buildEventSellOrder(
-                  assetType,
-                  asset,
-                  currencyType,
-                  '0',
-                  quantityQNT,
-                  priceNQT,
-                )
+                    assetType,
+                    asset,
+                    currencyType,
+                    "0",
+                    quantityQNT,
+                    priceNQT
+                  )
                 : buildEventBuyOrder(
-                  assetType,
-                  asset,
-                  currencyType,
-                  '0',
-                  quantityQNT,
-                  priceNQT,
-                ),
+                    assetType,
+                    asset,
+                    currencyType,
+                    "0",
+                    quantityQNT,
+                    priceNQT
+                  )
             );
             break;
           }
@@ -321,11 +387,53 @@ function getEventsFromTransaction(txData: TransactionApiResponse, _addrXpub) {
           case SUBTYPE_ACCOUNT_CONTROL_EFFECTIVE_BALANCE_LEASING:
             const { period } = txData.attachment;
             events.push(
-              buildEventLeaseBalance({ addrXpub, publicKey }, period),
+              buildEventLeaseBalance({ addrXpub, publicKey }, period)
             );
             break;
         }
         break;
+      case TYPE_DIGITAL_GOODS:
+        switch (txData.subtype) {
+          case SUBTYPE_DIGITAL_GOODS_PURCHASE: {
+            const { goods, quantity, priceNQT, deliveryDeadlineTimestamp } = <
+              AttachmentApiResponseDgsPurchase
+            >txData.attachment;
+            events.push(
+              buildEventDgsPurchase(
+                goods,
+                quantity,
+                priceNQT,
+                deliveryDeadlineTimestamp
+              )
+            );
+            break;
+          }
+          case SUBTYPE_DIGITAL_GOODS_DELIVERY: {
+            const {
+              purchase,
+              goodsData,
+              goodsNonce,
+              discountNQT,
+              goodsIsText,
+            } = <AttachmentApiResponseDgsDelivery>txData.attachment;
+            events.push(
+              buildEventDgsDelivery(
+                purchase,
+                goodsData,
+                goodsNonce,
+                discountNQT,
+                goodsIsText
+              )
+            );
+            break;
+          }
+          case SUBTYPE_DIGITAL_GOODS_REFUND:
+            const { purchase, refundNQT } = <AttachmentApiResponseDgsRefund>(
+              txData.attachment
+            );
+            events.push(buildEventDgsRefund(purchase, refundNQT));
+            break;
+        }
     }
     if (!isIncoming) {
       events.push(buildEventFee(txData.feeNQT));
