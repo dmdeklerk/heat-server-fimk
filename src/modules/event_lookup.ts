@@ -403,7 +403,7 @@ function getEventsFromTransaction(txData: TransactionApiResponse, _addrXpub) {
                 goods,
                 quantity,
                 priceNQT,
-                txData.recipient, // puschase -> recipient is seller
+                txData.sender,
                 deliveryDeadlineTimestamp,
               )
             );
@@ -424,7 +424,7 @@ function getEventsFromTransaction(txData: TransactionApiResponse, _addrXpub) {
                 goodsNonce,
                 discountNQT,
                 goodsIsText,
-                txData.sender, // delivery -> sender is seller
+                txData.sender, 
               )
             );
             break;
@@ -437,7 +437,7 @@ function getEventsFromTransaction(txData: TransactionApiResponse, _addrXpub) {
               buildEventDgsRefund(
                 purchase, 
                 refundNQT, 
-                txData.sender // refund -> sender is seller
+                txData.sender,
               )
             );
             break;

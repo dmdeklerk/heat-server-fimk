@@ -188,7 +188,7 @@ function getEventsFromTransaction(txData, _addrXpub) {
                 switch (txData.subtype) {
                     case SUBTYPE_DIGITAL_GOODS_PURCHASE: {
                         const { goods, quantity, priceNQT, deliveryDeadlineTimestamp } = txData.attachment;
-                        events.push((0, heat_server_common_1.buildEventDgsPurchase)(goods, quantity, priceNQT, txData.recipient, deliveryDeadlineTimestamp));
+                        events.push((0, heat_server_common_1.buildEventDgsPurchase)(goods, quantity, priceNQT, txData.sender, deliveryDeadlineTimestamp));
                         break;
                     }
                     case SUBTYPE_DIGITAL_GOODS_DELIVERY: {
