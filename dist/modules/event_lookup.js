@@ -188,17 +188,17 @@ function getEventsFromTransaction(txData, _addrXpub) {
                 switch (txData.subtype) {
                     case SUBTYPE_DIGITAL_GOODS_PURCHASE: {
                         const { goods, quantity, priceNQT, deliveryDeadlineTimestamp } = txData.attachment;
-                        events.push((0, heat_server_common_1.buildEventDgsPurchase)(goods, quantity, priceNQT, deliveryDeadlineTimestamp));
+                        events.push((0, heat_server_common_1.buildEventDgsPurchase)(goods, quantity, priceNQT, txData.recipient, deliveryDeadlineTimestamp));
                         break;
                     }
                     case SUBTYPE_DIGITAL_GOODS_DELIVERY: {
                         const { purchase, goodsData, goodsNonce, discountNQT, goodsIsText, } = txData.attachment;
-                        events.push((0, heat_server_common_1.buildEventDgsDelivery)(purchase, goodsData, goodsNonce, discountNQT, goodsIsText));
+                        events.push((0, heat_server_common_1.buildEventDgsDelivery)(purchase, goodsData, goodsNonce, discountNQT, goodsIsText, txData.sender));
                         break;
                     }
                     case SUBTYPE_DIGITAL_GOODS_REFUND:
                         const { purchase, refundNQT } = (txData.attachment);
-                        events.push((0, heat_server_common_1.buildEventDgsRefund)(purchase, refundNQT));
+                        events.push((0, heat_server_common_1.buildEventDgsRefund)(purchase, refundNQT, txData.sender));
                         break;
                 }
         }
