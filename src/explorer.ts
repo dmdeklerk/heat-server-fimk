@@ -6,6 +6,7 @@ import { publicKeyLookup } from './modules/publickey_lookup'
 import { tokenDiscovery } from './modules/token_discovery'
 import { transactionStatus } from './modules/transaction_status'
 import { broadcast } from './modules/broadcast'
+import { customFimkDgsGood } from './modules/custom_fimk_dgs_good';
 import { ModuleProvider } from 'heat-server-common/dist/types/module_provider.interface';
 
 /* ------------------- Configuration Start ------------------- */
@@ -22,6 +23,7 @@ const modules: ModuleProvider = {
   publicKeyLookup,
   tokenDiscovery,
   transactionStatus,
+  customFimkDgsGood,
 }
 
 /* ------------------- Configuration End --------------------- */

@@ -9,6 +9,7 @@ const publickey_lookup_1 = require("./modules/publickey_lookup");
 const token_discovery_1 = require("./modules/token_discovery");
 const transaction_status_1 = require("./modules/transaction_status");
 const broadcast_1 = require("./modules/broadcast");
+const custom_fimk_dgs_good_1 = require("./modules/custom_fimk_dgs_good");
 const ID = "fimk";
 const modules = {
     balanceLookup: balance_lookup_1.balanceLookup,
@@ -18,6 +19,7 @@ const modules = {
     publicKeyLookup: publickey_lookup_1.publicKeyLookup,
     tokenDiscovery: token_discovery_1.tokenDiscovery,
     transactionStatus: transaction_status_1.transactionStatus,
+    customFimkDgsGood: custom_fimk_dgs_good_1.customFimkDgsGood,
 };
 class Explorer extends heat_server_common_1.ExplorerBase {
     constructor(protocol, host, rateLimiter, apiKey, middleWare) {
