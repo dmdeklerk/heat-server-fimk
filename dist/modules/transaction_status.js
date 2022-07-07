@@ -10,10 +10,14 @@ async function transactionStatus(context, param) {
         const body = await transactionStatusReq(context, transactionId);
         const transaction = (0, heat_server_common_1.tryParse)(body, logger);
         if ((0, lodash_1.isNumber)(transaction.confirmations)) {
+            const body2 = await transactionBytesReq(context, transactionId);
+            const transaction2 = (0, heat_server_common_1.tryParse)(body2, logger);
+            const hex = (0, lodash_1.isString)(transaction2.transactionBytes) ? transaction2.transactionBytes : null;
             return {
                 value: {
                     isAccepted: true,
                     confirmations: transaction.confirmations,
+                    hex: hex,
                 },
             };
         }
@@ -50,6 +54,11 @@ function unconfirmedReq(context, addrXpub) {
 function transactionStatusReq(context, transactionId) {
     const { req, protocol, host } = context;
     const url = `${protocol}://${host}?requestType=getTransaction&transaction=${transactionId}`;
+    return req.get(url);
+}
+function transactionBytesReq(context, transactionId) {
+    const { req, protocol, host } = context;
+    const url = `${protocol}://${host}?requestType=getTransactionBytes&transaction=${transactionId}`;
     return req.get(url);
 }
 //# sourceMappingURL=transaction_status.js.map

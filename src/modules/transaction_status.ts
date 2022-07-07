@@ -1,5 +1,5 @@
 import { TransactionStatusParam, TransactionStatusResult, tryParse, CallContext, ModuleResponse } from 'heat-server-common'
-import { isNumber } from 'lodash';
+import { isNumber, isString } from 'lodash';
 
 interface AttachmentApiResponse {
   quantityQNT?: string;
@@ -24,6 +24,10 @@ interface TransactionApiResponse {
   attachment: AttachmentApiResponse;
 }
 
+interface TransactionBytesApiResponse {
+  transactionBytes: string
+}
+
 export async function transactionStatus(context: CallContext, param: TransactionStatusParam): Promise<ModuleResponse<TransactionStatusResult>> {
   try {
     const { logger } = context
@@ -32,10 +36,15 @@ export async function transactionStatus(context: CallContext, param: Transaction
     const body = await transactionStatusReq(context, transactionId);
     const transaction: TransactionApiResponse = tryParse(body, logger);
     if (isNumber(transaction.confirmations)) {
+      /// lookup the transaction bytes
+      const body2 = await transactionBytesReq(context, transactionId);
+      const transaction2: TransactionBytesApiResponse = tryParse(body2, logger);
+      const hex = isString(transaction2.transactionBytes) ? transaction2.transactionBytes : null;
       return {
         value: {
           isAccepted: true,
           confirmations: transaction.confirmations,
+          hex: hex,
         },
       };
     }
@@ -126,5 +135,19 @@ function unconfirmedReq(context: CallContext, addrXpub: string) {
 function transactionStatusReq(context: CallContext, transactionId: string) {
   const { req, protocol, host } = context
   const url = `${protocol}://${host}?requestType=getTransaction&transaction=${transactionId}`;
+  return req.get(url);
+}
+
+/**
+ * {
+ *   "unsignedTransactionBytes":"0010..6765",
+ *   "requestProcessingTime":0,
+ *   "confirmations":1716670,
+ *   "transactionBytes":"0010..6765"
+ * }
+ */
+function transactionBytesReq(context: CallContext, transactionId: string) {
+  const { req, protocol, host } = context
+  const url = `${protocol}://${host}?requestType=getTransactionBytes&transaction=${transactionId}`;
   return req.get(url);
 }
