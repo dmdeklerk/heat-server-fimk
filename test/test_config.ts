@@ -3,7 +3,7 @@ import { FIMK_GETADDRESS } from '../src/index'
 
 export const testConfig = {
   protocol: 'https',
-  host: 'cloud.mofowallet.org:7886/nxt'
+  host: 'fimk1.heatwallet.com/nxt'
 }
 
 export function createContext(label?: string) {

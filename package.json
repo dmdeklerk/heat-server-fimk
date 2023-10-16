@@ -7,7 +7,8 @@
     "clean": "rimraf dist/*",
     "prepublish": "npm run clean && tsc",
     "test": "mocha -r ts-node/register test/*.test.ts",
-    "test-one": "mocha -r ts-node/register "
+    "test-one": "mocha -r ts-node/register ",
+    "test:events": "mocha -r ts-node/register test/event_lookup.test.ts"
   },
   "author": "me",
   "license": "ISC",

@@ -223,14 +223,14 @@ async function smartEventsLookup(
 
   let cursor = 0;
   let endReached = false;
-  while (cursor < to) {
+  while (endReached == false) {
     let confirmedTransactionJson = await transactionsLookupReq(
       context,
       addrXpub,
       cursor,
       cursor + 100
     );
-    cursor = cursor + 100 + 1;
+    cursor = cursor + 100;
     let data = tryParse(confirmedTransactionJson);
     if (Array.isArray(data.transactions)) {
       if (data.transactions.length < 100) {
@@ -249,11 +249,11 @@ async function smartEventsLookup(
       });
       transactions = transactions.concat(temp);
     } else {
-      logger.warn(`No unconfirmed transactions ${prettyPrint(data)}`);
+      logger.warn(`No transactions ${prettyPrint(data)}`);
     }
 
     // 3. If {from} + {to} was satisfied with this data alone, return that
-    let slice = transactions.slice(from, to + 1);
+    let slice = transactions.slice(from, to);
     if (slice.length == size || endReached) {
       return slice;
     }
