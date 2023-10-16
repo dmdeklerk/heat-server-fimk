@@ -218,7 +218,7 @@ async function smartEventsLookup(
   // 3. If {from} + {to} was satisfied with this data alone, return that
   let slice = transactions.slice(from, to + 1);
   if (slice.length == size) {
-    return transactions;
+    return slice;
   }
 
   let cursor = 0;
@@ -255,7 +255,7 @@ async function smartEventsLookup(
     // 3. If {from} + {to} was satisfied with this data alone, return that
     let slice = transactions.slice(from, to + 1);
     if (slice.length == size || endReached) {
-      return transactions;
+      return slice;
     }
   }
   // logger.warn(`Not reached.. `);

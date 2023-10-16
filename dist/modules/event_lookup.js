@@ -103,7 +103,7 @@ async function smartEventsLookup(context, param) {
     });
     let slice = transactions.slice(from, to + 1);
     if (slice.length == size) {
-        return transactions;
+        return slice;
     }
     let cursor = 0;
     let endReached = false;
@@ -131,7 +131,7 @@ async function smartEventsLookup(context, param) {
         }
         let slice = transactions.slice(from, to + 1);
         if (slice.length == size || endReached) {
-            return transactions;
+            return slice;
         }
     }
     return transactions;
