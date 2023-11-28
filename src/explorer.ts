@@ -8,6 +8,7 @@ import { transactionStatus } from './modules/transaction_status'
 import { broadcast } from './modules/broadcast'
 import { customFimkDgsGood } from './modules/custom_fimk_dgs_good';
 import { ModuleProvider } from 'heat-server-common/dist/types/module_provider.interface';
+import { addressExistsLookup } from './modules/address_exists_lookup';
 
 /* ------------------- Configuration Start ------------------- */
 
@@ -24,6 +25,7 @@ const modules: ModuleProvider = {
   tokenDiscovery,
   transactionStatus,
   customFimkDgsGood,
+  addressExistsLookup
 }
 
 /* ------------------- Configuration End --------------------- */

@@ -18,7 +18,7 @@ describe('Balance Lookup', () => {
     isObject(resp)
     let result = resp.value
     isObject(result)
-    isBoolean(result.exists)
-    isString(result.value)
+    isBoolean(result?.exists)
+    isString(result?.value)
   });
 });
