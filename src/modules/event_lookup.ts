@@ -250,6 +250,7 @@ async function smartEventsLookup(
       transactions = transactions.concat(temp);
     } else {
       logger.warn(`No transactions ${prettyPrint(data)}`);
+      return []
     }
 
     // 3. If {from} + {to} was satisfied with this data alone, return that

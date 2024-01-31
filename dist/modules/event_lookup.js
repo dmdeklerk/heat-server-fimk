@@ -128,6 +128,7 @@ async function smartEventsLookup(context, param) {
         }
         else {
             logger.warn(`No transactions ${(0, heat_server_common_1.prettyPrint)(data)}`);
+            return [];
         }
         let slice = transactions.slice(from, to);
         if (slice.length == size || endReached) {
