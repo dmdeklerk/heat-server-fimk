@@ -36,7 +36,6 @@ async function eventLookup(context, param) {
         const data = await smartEventsLookup(context, param);
         let value;
         if (!Array.isArray(data)) {
-            logger.log(`No transactions for ${addrXpub} got ${(0, heat_server_common_1.prettyPrint)(data)}`);
             value = [];
         }
         else if (minimal) {

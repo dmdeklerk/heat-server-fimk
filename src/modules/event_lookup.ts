@@ -107,7 +107,7 @@ export async function eventLookup(
     const data = await smartEventsLookup(context, param);
     let value;
     if (!Array.isArray(data)) {
-      logger.log(`No transactions for ${addrXpub} got ${prettyPrint(data)}`);
+      // logger.log(`No transactions for ${addrXpub} got ${prettyPrint(data)}`);
       value = [];
     } else if (minimal) {
       value = data.map(({ txData }) => txData.transaction);

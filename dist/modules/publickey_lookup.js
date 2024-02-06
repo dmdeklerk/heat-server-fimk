@@ -21,7 +21,6 @@ async function publicKeyLookup(context, param) {
             };
         }
         else {
-            logger.warn(`No public key for ${addrXpub} ${(0, heat_server_common_1.prettyPrint)(data)}`);
             return {
                 value: {
                     publicKey: null,

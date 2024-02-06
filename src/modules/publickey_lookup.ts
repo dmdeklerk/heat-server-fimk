@@ -19,7 +19,7 @@ export async function publicKeyLookup(context: CallContext, param: PublicKeyLook
         },
       };
     } else {
-      logger.warn(`No public key for ${addrXpub} ${prettyPrint(data)}`);
+      // logger.warn(`No public key for ${addrXpub} ${prettyPrint(data)}`);
       return {
         value: {
           publicKey: null,
